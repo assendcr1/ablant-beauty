@@ -1,0 +1,26 @@
+# Environment
+.env
+.env.local
+.env.production
+scripts/wc-api-keys.txt
+
+# Next.js
+nextjs/.next/
+nextjs/node_modules/
+nextjs/out/
+nextjs/.env*.local
+
+# WordPress uploads (large, don't commit)
+wordpress/uploads/
+
+# Docker volumes
+db_data/
+wp_data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

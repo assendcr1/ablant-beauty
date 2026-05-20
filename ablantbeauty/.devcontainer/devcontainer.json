@@ -1,0 +1,53 @@
+{
+  "name": "AblantBeauty Dev Environment",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "nextjs",
+  "workspaceFolder": "/app",
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "20" },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  "forwardPorts": [3000, 8080, 8081],
+  "portsAttributes": {
+    "3000": {
+      "label": "Next.js Frontend",
+      "onAutoForward": "openBrowserOnce"
+    },
+    "8080": {
+      "label": "WordPress / WooCommerce Admin",
+      "onAutoForward": "notify"
+    },
+    "8081": {
+      "label": "phpMyAdmin",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "postCreateCommand": "bash /workspaces/ablantbeauty/scripts/codespaces-setup.sh",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "ms-vscode.vscode-typescript-next",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "ms-azuretools.vscode-docker",
+        "GraphQL.vscode-graphql-syntax"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 2,
+        "tailwindCSS.experimental.classRegex": [
+          ["cn\\(([^)]*)\\)", "'([^']*)'"]
+        ]
+      }
+    }
+  }
+}

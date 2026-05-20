@@ -1,0 +1,119 @@
+
+services:
+  # ── MySQL Database ──────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: ablant_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-ablantbeauty_wp}
+      MYSQL_USER: ${DB_USER:-ablant_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-ablant_pass_2024}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ablant_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── WordPress + WooCommerce ─────────────────────────────────
+  wordpress:
+    image: wordpress:latest
+    container_name: ablant_wordpress
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${DB_NAME:-ablantbeauty_wp}
+      WORDPRESS_DB_USER: ${DB_USER:-ablant_user}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD:-ablant_pass_2024}
+      WORDPRESS_TABLE_PREFIX: wp_
+      WORDPRESS_DEBUG: ${WP_DEBUG:-false}
+    volumes:
+      - wp_data:/var/www/html
+      - ./wordpress/themes:/var/www/html/wp-content/themes/ablant-headless
+      - ./wordpress/plugins:/var/www/html/wp-content/plugins/ablant-custom
+      - ./wordpress/uploads:/var/www/html/wp-content/uploads
+      - ./wordpress/wp-config-extra.php:/var/www/html/wp-config-extra.php
+    networks:
+      - ablant_network
+
+  # ── WP-CLI (setup automation) ───────────────────────────────
+  wpcli:
+    image: wordpress:cli-php8.2
+    container_name: ablant_wpcli
+    depends_on:
+      - wordpress
+      - db
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${DB_NAME:-ablantbeauty_wp}
+      WORDPRESS_DB_USER: ${DB_USER:-ablant_user}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD:-ablant_pass_2024}
+    volumes:
+      - wp_data:/var/www/html
+      - ./scripts:/scripts
+    networks:
+      - ablant_network
+    entrypoint: /bin/sh
+    command: -c "sleep 20 && sh /scripts/wpcli-setup.sh"
+
+  # ── phpMyAdmin ──────────────────────────────────────────────
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: ablant_phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: ${DB_USER:-ablant_user}
+      PMA_PASSWORD: ${DB_PASSWORD:-ablant_pass_2024}
+      UPLOAD_LIMIT: 64M
+    networks:
+      - ablant_network
+
+  # ── Next.js Frontend ────────────────────────────────────────
+  nextjs:
+    build:
+      context: ./nextjs
+      dockerfile: Dockerfile
+    container_name: ablant_nextjs
+    restart: unless-stopped
+    depends_on:
+      - wordpress
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_WP_URL: http://wordpress
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      WC_CONSUMER_KEY: ${WC_CONSUMER_KEY:-ck_placeholder}
+      WC_CONSUMER_SECRET: ${WC_CONSUMER_SECRET:-cs_placeholder}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-super_secret_change_in_production}
+      NEXTAUTH_URL: http://localhost:3000
+      NODE_ENV: development
+    volumes:
+      - ./nextjs:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - ablant_network
+
+volumes:
+  db_data:
+  wp_data:
+
+networks:
+  ablant_network:
+    driver: bridge
