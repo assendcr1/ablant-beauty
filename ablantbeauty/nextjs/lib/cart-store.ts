@@ -63,6 +63,6 @@ export const useCartStore = create<CartStore>()(
 
       count: () => get().items.reduce((sum, item) => sum + item.quantity, 0),
     }),
-    { name: 'ablant-cart' }
+    { name: 'ablant-cart', skipHydration: true }
   )
 );

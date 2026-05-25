@@ -17,7 +17,9 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const { data: session } = useSession();
-  const count = useCartStore((s) => s.count());
+  const cartCount = useCartStore((s) => s.count);
+  const [count, setCount] = useState(0);
+  useEffect(() => { setCount(cartCount()); }, [cartCount]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
