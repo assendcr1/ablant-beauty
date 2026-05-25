@@ -4,7 +4,7 @@
  * All client-side calls go through /wp-api proxy (Next.js rewrites)
  */
 
-const WP_URL = process.env.NEXT_PUBLIC_WP_URL || 'http://wordpress';
+const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || 'http://wordpress';
 const WC_KEY = process.env.WC_CONSUMER_KEY || '';
 const WC_SECRET = process.env.WC_CONSUMER_SECRET || '';
 
